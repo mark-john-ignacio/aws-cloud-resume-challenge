@@ -19,7 +19,7 @@ jobs:
         aws configure set default.region ${{ secrets.AWS_REGION }}
     - name: Sync S3 bucket
       run: |
-        aws s3 sync build/ s3://${{ secrets.AWS_S3_BUCKET }} --acl public-read --follow-symlinks --delete
+        aws s3 sync build/ s3://${{ secrets.AWS_S3_BUCKET }} --follow-symlinks --delete
     - name: Debug Info
       run: |
         echo "AWS_S3_BUCKET=${{ secrets.AWS_S3_BUCKET }}"
