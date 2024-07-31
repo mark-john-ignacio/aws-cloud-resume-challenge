@@ -85,40 +85,11 @@ The architecture of this project includes the following components:
 2. **Submit Data**: Use the resume form to submit data, which will be handled by AWS Lambda and stored in DynamoDB.
 3. **Monitor and Manage**: Use AWS Management Console to monitor resources and manage configurations.
 
-## 📜 Contributing
-
-Contributions to improve or extend this project are welcome! To contribute, follow these steps:
-
-1. **Fork the Repository**: Create a copy of the repository on GitHub.
-2. **Create a Branch**
-
-   ```bash
-   git checkout -b feature/your-feature
-   ```
-
-3. **Make Changes**: Implement your changes or enhancements.
-4. **Commit Changes**
-
-   ```bash
-   git commit -am 'Add new feature or fix issue'
-   ```
-
-5. **Push Changes**
-
-   ```bash
-   git push origin feature/your-feature
-   ```
-
-6. **Submit a Pull Request**: Open a pull request on GitHub with a description of your changes.
 
 ## 🛠️ Known Issues
 
 - **SSL Certificate Propagation**: It may take some time for the SSL certificate to be fully propagated and recognized.
 - **CloudFront Caching**: Cached content might delay the visibility of changes. Clear cache if necessary.
-
-## 📄 License
-
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
 
 ## 📞 Contact
 
@@ -127,15 +98,7 @@ For questions or support, please contact:
 - **Email**: [markme44.mm@gmail.com](mailto:markme44.mm@gmail.com)
 - **GitHub Issues**: [Submit an Issue](https://github.com/markme44/aws-cloud-resume-challenge/issues)
 
-## 📈 GitHub Stats
-
-![Mark John Ignacio's GitHub Stats](https://github-readme-stats.vercel.app/api?username=markme44&show_icons=true&theme=radical)
-
-![Top Languages](https://github-readme-stats.vercel.app/api/top-langs/?username=markme44&layout=compact&theme=radical)
-
 ---
 
 Thank you for exploring my AWS Cloud Resume Challenge project! Feel free to check out the code, contribute, or get in touch for any questions.
 ```
-
-This README provides a detailed overview of your Cloud Resume Challenge project, including setup instructions, usage, and contribution guidelines. You can copy this content into a file named `README.md` in your project repository.
