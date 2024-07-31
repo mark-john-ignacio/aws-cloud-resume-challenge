@@ -101,4 +101,3 @@ For questions or support, please contact:
 ---
 
 Thank you for exploring my AWS Cloud Resume Challenge project! Feel free to check out the code, contribute, or get in touch for any questions.
-```
