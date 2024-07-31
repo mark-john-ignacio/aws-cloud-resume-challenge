@@ -6,7 +6,7 @@ This project is my attempt at the [Cloud Resume Challenge](https://cloudresumech
 
 ## 📐 Architecture
 
-![Architecture Diagram](path_to_your_architecture_diagram.png) <!-- Replace with the path to your architecture diagram image -->
+![Architecture Diagram](architecture-diagram/architecture-diagram.png) <!-- Replace with the path to your architecture diagram image -->
 
 The architecture of this project includes the following components:
 
@@ -82,7 +82,7 @@ The architecture of this project includes the following components:
 ## 🔧 Usage
 
 1. **Visit the Website**: Navigate to the CloudFront URL or custom domain to view your resume.
-2. **Submit Data**: Use the resume form to submit data, which will be handled by AWS Lambda and stored in DynamoDB.
+2. **Visitor Counter**: Visitor counter will automatically update, which will be handled by AWS Lambda and stored in DynamoDB.
 3. **Monitor and Manage**: Use AWS Management Console to monitor resources and manage configurations.
 
 
@@ -100,4 +100,4 @@ For questions or support, please contact:
 
 ---
 
-Thank you for exploring my AWS Cloud Resume Challenge project! Feel free to check out the code, contribute, or get in touch for any questions.
+Thank you for exploring my AWS Cloud Resume Challenge project! Feel free to get in touch for any questions.
