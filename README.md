@@ -1,6 +1,3 @@
-Certainly! Here's a comprehensive README for your AWS Cloud Resume Challenge project, incorporating the details you provided:
-
-```markdown
 # AWS Cloud Resume Challenge
 
 ## 📚 Overview
