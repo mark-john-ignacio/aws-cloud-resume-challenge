@@ -6,7 +6,7 @@ This project is my attempt at the [Cloud Resume Challenge](https://cloudresumech
 
 ## 📐 Architecture
 
-![Architecture Diagram](path_to_your_architecture_diagram.png) <!-- Replace with the path to your architecture diagram image -->
+![Architecture Diagram](architecture-diagram/architecture-diagram.png) <!-- Replace with the path to your architecture diagram image -->
 
 The architecture of this project includes the following components:
 
