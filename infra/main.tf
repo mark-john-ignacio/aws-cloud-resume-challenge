@@ -1,26 +1,26 @@
-resource "aws_s3_bucket" "mark-john-ignacio-html-resume" {
-    bucket = "mark-john-ignacio-html-resume"
+resource "aws_s3_bucket" "mark_john_ignacio_html_resume" {
+    bucket = "mark_john_ignacio_html_resume"
     tags = {
-        Name = "mark-john-ignacio-html-resume"
+        Name = "mark_john_ignacio_html_resume"
         Project = "cloud-resume-project-with-terraform"
     }
 }
 
 resource "null_resource" "upload_build_directory" {
     provisioner "local-exec" {
-        command = "aws s3 sync ../build s3://${aws_s3_bucket.mark-john-ignacio-html-resume.bucket} --delete"
+        command = "aws s3 sync ../build s3://${aws_s3_bucket.mark_john_ignacio_html_resume.bucket} --delete"
     }
 
-    depends_on = [aws_s3_bucket.mark-john-ignacio-html-resume]
+    depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
 }
 
 # Needed for destroying the bucket
 # resource "null_resource" "empty_s3_bucket" {
 #     provisioner "local-exec" {
-#         command = "aws s3 rm s3://${aws_s3_bucket.mark-john-ignacio-html-resume.bucket} --recursive"
+#         command = "aws s3 rm s3://${aws_s3_bucket.mark_john_ignacio_html_resume.bucket} --recursive"
 #     }
 
-#     depends_on = [aws_s3_bucket.mark-john-ignacio-html-resume]
+#     depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
 # }
 
 # Define the origin access identity
@@ -29,7 +29,7 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
 }
 
 resource "aws_s3_bucket_policy" "bucket_policy" {
-  bucket = aws_s3_bucket.mark-john-ignacio-html-resume.id
+  bucket = aws_s3_bucket.mark_john_ignacio_html_resume.id
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -67,7 +67,7 @@ resource "aws_s3_bucket_policy" "bucket_policy" {
 resource "aws_cloudfront_distribution" "cdn" {
   origin {
     domain_name = aws_s3_bucket.mark_john_ignacio_html_resume.bucket_regional_domain_name
-    origin_id   = "S3-mark-john-ignacio-html-resume"
+    origin_id   = "S3-mark_john_ignacio_html_resume"
 
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path
@@ -76,7 +76,7 @@ resource "aws_cloudfront_distribution" "cdn" {
 
   enabled             = true
   is_ipv6_enabled     = true
-  comment             = "CloudFront distribution for mark-john-ignacio-html-resume"
+  comment             = "CloudFront distribution for mark_john_ignacio_html_resume"
   default_root_object = "index.html"
   
   aliases = ["resume.09276477.xyz"]
@@ -84,7 +84,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "S3-mark-john-ignacio-html-resume"
+    target_origin_id = "S3-mark_john_ignacio_html_resume"
 
     forwarded_values {
       query_string = false
@@ -114,7 +114,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   retain_on_delete = true
 
   tags = {
-    Name    = "mark-john-ignacio-html-resume-cdn"
+    Name    = "mark_john_ignacio_html_resume-cdn"
     Project = "cloud-resume-project-with-terraform"
   }
 }
@@ -203,6 +203,7 @@ resource "aws_lambda_function" "myfunc" {
         Name = "myfunc"
         Project = "cloud-resume-project-with-terraform"
     }
+    depends_on = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
   
 }
 
@@ -285,4 +286,16 @@ resource "aws_lambda_function_url" "url1" {
         allow_headers = ["date", "keep-alive"]
         max_age = 3600
     }
+}
+
+output "s3_bucket_name" {
+    value = aws_s3_bucket.mark_john_ignacio_html_resume.bucket
+}
+
+output "cloudfront_domain_name" {
+    value = aws_cloudfront_distribution.cdn.domain_name
+}
+
+output "lambda_function_url" {
+    value = aws_lambda_function_url.url1.function_url
 }
