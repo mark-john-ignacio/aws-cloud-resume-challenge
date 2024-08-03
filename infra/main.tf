@@ -1,5 +1,5 @@
 resource "aws_s3_bucket" "mark_john_ignacio_html_resume" {
-    bucket = "mark_john_ignacio_html_resume"
+    bucket = "mark-john-ignacio-html-resume-abc123"
     tags = {
         Name = "mark_john_ignacio_html_resume"
         Project = "cloud-resume-project-with-terraform"
@@ -134,56 +134,6 @@ resource "aws_dynamodb_table" "cloud_resume_terraform" {
   tags = {
     Name    = "cloud-resume-terraform"
     Project = "cloud-resume-project-with-terraform"
-  }
-}
-
-resource "aws_appautoscaling_target" "dynamodb_read_target" {
-  max_capacity       = 10
-  min_capacity       = 1
-  resource_id        = "table/cloud-resume-terraform"
-  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
-  service_namespace  = "dynamodb"
-}
-
-resource "aws_appautoscaling_policy" "dynamodb_read_policy" {
-  name               = "DynamoDBReadCapacityUtilization"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.dynamodb_read_target.resource_id
-  scalable_dimension = aws_appautoscaling_target.dynamodb_read_target.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.dynamodb_read_target.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    target_value       = 70.0
-    predefined_metric_specification {
-      predefined_metric_type = "DynamoDBReadCapacityUtilization"
-    }
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 60
-  }
-}
-
-resource "aws_appautoscaling_target" "dynamodb_write_target" {
-  max_capacity       = 10
-  min_capacity       = 1
-  resource_id        = "table/cloud-resume-terraform"
-  scalable_dimension = "dynamodb:table:WriteCapacityUnits"
-  service_namespace  = "dynamodb"
-}
-
-resource "aws_appautoscaling_policy" "dynamodb_write_policy" {
-  name               = "DynamoDBWriteCapacityUtilization"
-  policy_type        = "TargetTrackingScaling"
-  resource_id        = aws_appautoscaling_target.dynamodb_write_target.resource_id
-  scalable_dimension = aws_appautoscaling_target.dynamodb_write_target.scalable_dimension
-  service_namespace  = aws_appautoscaling_target.dynamodb_write_target.service_namespace
-
-  target_tracking_scaling_policy_configuration {
-    target_value       = 70.0
-    predefined_metric_specification {
-      predefined_metric_type = "DynamoDBWriteCapacityUtilization"
-    }
-    scale_in_cooldown  = 60
-    scale_out_cooldown = 60
   }
 }
 
