@@ -28,6 +28,24 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
   comment = "OAI for S3 bucket"
 }
 
+resource "aws_s3_bucket_policy" "bucket_policy" {
+  bucket = aws_s3_bucket.mark_john_ignacio_html_resume.id
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:aws:iam::cloudfront:user/CloudFront Origin Access Identity ${aws_cloudfront_origin_access_identity.oai.cloudfront_access_identity_path}"
+        },
+        Action = "s3:GetObject",
+        Resource = "${aws_s3_bucket.mark_john_ignacio_html_resume.arn}/*"
+      }
+    ]
+  })
+}
+
 # Define the CloudFront distribution
 resource "aws_cloudfront_distribution" "cdn" {
   origin {
@@ -71,8 +89,12 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 
   viewer_certificate {
-    cloudfront_default_certificate = true
+    acm_certificate_arn      = "arn:aws:acm:us-east-1:010526260632:certificate/0e73b116-7f6b-4f4b-95d7-ee512bd84279"
+    ssl_support_method       = "sni-only"
+    minimum_protocol_version = "TLSv1.2_2021"
   }
+  
+  retain_on_delete = true
 
   tags = {
     Name    = "mark-john-ignacio-html-resume-cdn"
