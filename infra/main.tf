@@ -131,11 +131,6 @@ resource "aws_dynamodb_table" "cloud_resume_terraform" {
     type = "S"
   }
 
-  attribute {
-    name = "views"
-    type = "N"
-  }
-
   tags = {
     Name    = "cloud-resume-terraform"
     Project = "cloud-resume-project-with-terraform"
@@ -192,24 +187,9 @@ resource "aws_appautoscaling_policy" "dynamodb_write_policy" {
   }
 }
 
-resource "aws_lambda_function" "myfunc" {
-    filename        = data.archive_file.zip.output_path
-    source_code_hash = data.archive_file.zip.output_base64sha256
-    function_name   = "myfunc"
-    role            = aws_iam_role.iam_for_lambda.arn
-    handler         = "func.lambda_handler"
-    runtime         = "python3.8"
-    tags = {
-        Name = "myfunc"
-        Project = "cloud-resume-project-with-terraform"
-    }
-    depends_on = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
-  
-}
-
 resource "aws_iam_role" "iam_for_lambda" {
-    name = "iam_for_lambda"
-    assume_role_policy = <<EOF
+  name = "iam_for_lambda"
+  assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -224,68 +204,108 @@ resource "aws_iam_role" "iam_for_lambda" {
   ]
 }
 EOF
-    tags = {
-        Name = "iam_for_lambda"
-        Project = "cloud-resume-project-with-terraform"
-    }
+  tags = {
+    Name    = "iam_for_lambda"
+    Project = "cloud-resume-project-with-terraform"
+  }
 }
 
 resource "aws_iam_policy" "iam_policy_for_resume_project" {
-    name       = "aws_iam_policy_for_terraform_resume_project_policy"
-    path      = "/"
-    description = "AWS IAM Policy for Terraform Resume Project"
-    policy    = jsonencode(
-        {
-            Version : "2012-10-17",
-            Statement : [
-                {
-                    Effect : "Allow",
-                    Action : [
-                        "logs:CreateLogGroup",
-                        "logs:CreateLogStream",
-                        "logs:PutLogEvents"
-                    ],
-                    Resource : "arn:aws:logs:*:*:*"
-                },
-                {
-                    Effect : "Allow",
-                    Action : [
-                        "dynamodb:PutItem",
-                        "dynamodb:GetItem",
-                        
-                        ],
-                    Resource : "${aws_dynamodb_table.cloud_resume_terraform.arn}"
-                }
-            ]   
-        })
-    tags = {
-        Name = "iam_policy_for_resume_project"
-        Project = "cloud-resume-project-with-terraform"
-    }  
+  name        = "aws_iam_policy_for_terraform_resume_project_policy"
+  path        = "/"
+  description = "AWS IAM Policy for Terraform Resume Project"
+  policy      = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "logs:CreateLogGroup",
+          "logs:CreateLogStream",
+          "logs:PutLogEvents"
+        ],
+        Resource: "arn:aws:logs:*:*:*"
+      },
+      {
+        Effect: "Allow",
+        Action: [
+          "dynamodb:PutItem",
+          "dynamodb:GetItem",
+          "dynamodb:UpdateItem"
+        ],
+        Resource: "${aws_dynamodb_table.cloud_resume_terraform.arn}"
+      }
+    ]
+  })
+  tags = {
+    Name    = "iam_policy_for_resume_project"
+    Project = "cloud-resume-project-with-terraform"
+  }
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
-    role = aws_iam_role.iam_for_lambda.name
-    policy_arn = aws_iam_policy.iam_policy_for_resume_project.arn
+  role      = aws_iam_role.iam_for_lambda.name
+  policy_arn = aws_iam_policy.iam_policy_for_resume_project.arn
 }
 
 data "archive_file" "zip" {
-    type        = "zip"
-    source_dir  = "${path.module}/lambda"
-    output_path = "${path.module}/lambda.zip"
+  type        = "zip"
+  source_dir  = "${path.module}/lambda"
+  output_path = "${path.module}/lambda.zip"
 }
 
-resource "aws_lambda_function_url" "url1" {
-    function_name = aws_lambda_function.myfunc.function_name
-    authorization_type = "NONE"
+resource "aws_lambda_function" "myfunc" {
+  filename         = data.archive_file.zip.output_path
+  source_code_hash = data.archive_file.zip.output_base64sha256
+  function_name    = "myfunc"
+  role             = aws_iam_role.iam_for_lambda.arn
+  handler          = "func.lambda_handler"
+  runtime          = "python3.8"
+  tags = {
+    Name    = "myfunc"
+    Project = "cloud-resume-project-with-terraform"
+  }
+  depends_on = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
+}
 
-    cors {
-        allow_credentials = true
-        allow_origins = ["http://resume.09276477.xyz"]
-        allow_methods = ["*"]
-        allow_headers = ["date", "keep-alive"]
-        max_age = 3600
-    }
+resource "aws_api_gateway_rest_api" "cloud_resume_api" {
+  name        = "cloud-resume-api"
+  description = "API for the Cloud Resume project"
+}
+
+resource "aws_api_gateway_resource" "views" {
+  rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
+  parent_id   = aws_api_gateway_rest_api.cloud_resume_api.root_resource_id
+  path_part   = "views"
+}
+
+resource "aws_api_gateway_method" "post_method" {
+  rest_api_id   = aws_api_gateway_rest_api.cloud_resume_api.id
+  resource_id   = aws_api_gateway_resource.views.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "lambda_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.cloud_resume_api.id
+  resource_id             = aws_api_gateway_resource.views.id
+  http_method             = aws_api_gateway_method.post_method.http_method
+  type                    = "AWS_PROXY"
+  integration_http_method = "POST"
+  uri                     = aws_lambda_function.myfunc.invoke_arn
+}
+
+resource "aws_api_gateway_deployment" "api_deployment" {
+  depends_on = [
+    aws_api_gateway_integration.lambda_integration
+  ]
+
+  rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
+  stage_name  = "prod"
+}
+
+output "api_url" {
+  value = "${aws_api_gateway_deployment.api_deployment.invoke_url}/views"
 }
 
 output "s3_bucket_name" {
