@@ -267,10 +267,6 @@ output "api_url" {
   value = "${aws_api_gateway_deployment.api_deployment.invoke_url}/views"
 }
 
-output "api_url" {
-  value = "${aws_api_gateway_deployment.api_deployment.invoke_url}/views"
-}
-
 output "s3_bucket_name" {
     value = aws_s3_bucket.mark_john_ignacio_html_resume.bucket
 }
