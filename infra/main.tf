@@ -245,13 +245,26 @@ resource "aws_api_gateway_integration" "lambda_integration" {
   uri                     = aws_lambda_function.myfunc.invoke_arn
 }
 
+resource "aws_lambda_permission" "apigw_lambda" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.myfunc.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_api_gateway_rest_api.cloud_resume_api.execution_arn}/*/*"
+}
+
 resource "aws_api_gateway_deployment" "api_deployment" {
   depends_on = [
-    aws_api_gateway_integration.lambda_integration
+    aws_api_gateway_integration.lambda_integration,
+    aws_lambda_permission.apigw_lambda
   ]
 
   rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
   stage_name  = "prod"
+}
+
+output "api_url" {
+  value = "${aws_api_gateway_deployment.api_deployment.invoke_url}/views"
 }
 
 output "api_url" {
@@ -264,4 +277,16 @@ output "s3_bucket_name" {
 
 output "cloudfront_domain_name" {
     value = aws_cloudfront_distribution.cdn.domain_name
+}
+
+resource "aws_dynamodb_table_item" "initial_item" {
+  table_name = "cloud-resume-terraform"
+  hash_key   = "id"
+
+  item = <<ITEM
+{
+  "id": {"S": "1"},
+  "views": {"N": "200"}
+}
+ITEM
 }

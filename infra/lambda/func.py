@@ -1,31 +1,50 @@
-import json
 import boto3
+import logging
+import json
+from decimal import Decimal
+
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    # Initialize DynamoDB resource
-    dynamodb = boto3.resource('dynamodb')
+    logger.info(f"Received event: {event}")
     
-    # Select the table
-    table = dynamodb.Table('cloud-resume-terraform')
-    
-    # Define the ID for which we want to increment views
-    item_id = event['id']
-    
-    # Update the item, incrementing the 'views' attribute
-    response = table.update_item(
-        Key={
-            'id': item_id
-        },
-        UpdateExpression="SET views = if_not_exists(views, :start) + :inc",
-        ExpressionAttributeValues={
-            ':start': 0,
-            ':inc': 1
-        },
-        ReturnValues="UPDATED_NEW"
-    )
-    
-    # Return the updated item
-    return {
-        'statusCode': 200,
-        'body': json.dumps(response['Attributes'])
-    }
+    try:
+        # Check if the event is from API Gateway
+        if 'body' in event:
+            body = json.loads(event['body'])
+            item_id = body['id']
+        else:
+            item_id = event['id']
+        
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table('cloud-resume-terraform')
+
+        response = table.update_item(
+            Key={
+                'id': item_id
+            },
+            UpdateExpression='ADD #v :inc',
+            ExpressionAttributeNames={
+                '#v': 'views'
+            },
+            ExpressionAttributeValues={
+                ':inc': 1
+            },
+            ReturnValues="UPDATED_NEW"
+        )
+
+        views = int(response['Attributes']['views'])
+        logger.info(f"Views updated successfully: {views}")
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'views': views})
+        }
+
+    except Exception as e:
+        logger.error(f"Error updating views: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': 'Internal server error'})
+        }
