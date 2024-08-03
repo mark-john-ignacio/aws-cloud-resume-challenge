@@ -29,7 +29,7 @@ resource "aws_cloudfront_origin_access_identity" "oai" {
 }
 
 resource "aws_s3_bucket_policy" "bucket_policy" {
-  bucket = aws_s3_bucket.mark_john_ignacio_html_resume.id
+  bucket = aws_s3_bucket.mark-john-ignacio-html-resume.id
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -41,6 +41,23 @@ resource "aws_s3_bucket_policy" "bucket_policy" {
         },
         Action = "s3:GetObject",
         Resource = "${aws_s3_bucket.mark_john_ignacio_html_resume.arn}/*"
+      },
+      {
+        Sid = "AllowGitHubActionsUpload",
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:aws:iam::010526260632:user/github-actions-deploy-user"
+        },
+        Action = [
+          "s3:PutObject",
+          "s3:PutObjectAcl",
+          "s3:DeleteObject",
+          "s3:ListBucket"
+        ],
+        Resource = [
+          "${aws_s3_bucket.mark_john_ignacio_html_resume.arn}",
+          "${aws_s3_bucket.mark_john_ignacio_html_resume.arn}/*"
+        ]
       }
     ]
   })
@@ -102,97 +119,170 @@ resource "aws_cloudfront_distribution" "cdn" {
   }
 }
 
-# resource "aws_lambda_function" "myfunc" {
-#     filename        = data.archive_file.zip.output_path
-#     source_code_hash = data.archive_file.zip.output_base64sha256
-#     function_name   = "myfunc"
-#     role            = aws_iam_role.iam_for_lambda.arn
-#     handler         = "func.lambda_handler"
-#     runtime         = "python3.8"
-#     tags = {
-#         Name = "myfunc"
-#         Project = "cloud-resume-project-with-terraform"
-#     }
+resource "aws_dynamodb_table" "cloud_resume_terraform" {
+  name           = "cloud-resume-terraform"
+  billing_mode   = "PROVISIONED"
+  read_capacity  = 1
+  write_capacity = 1
+  hash_key       = "id"
+
+  attribute {
+    name = "id"
+    type = "S"
+  }
+
+  attribute {
+    name = "views"
+    type = "N"
+  }
+
+  tags = {
+    Name    = "cloud-resume-terraform"
+    Project = "cloud-resume-project-with-terraform"
+  }
+}
+
+resource "aws_appautoscaling_target" "dynamodb_read_target" {
+  max_capacity       = 10
+  min_capacity       = 1
+  resource_id        = "table/cloud-resume-terraform"
+  scalable_dimension = "dynamodb:table:ReadCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "dynamodb_read_policy" {
+  name               = "DynamoDBReadCapacityUtilization"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.dynamodb_read_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.dynamodb_read_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.dynamodb_read_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = 70.0
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBReadCapacityUtilization"
+    }
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 60
+  }
+}
+
+resource "aws_appautoscaling_target" "dynamodb_write_target" {
+  max_capacity       = 10
+  min_capacity       = 1
+  resource_id        = "table/cloud-resume-terraform"
+  scalable_dimension = "dynamodb:table:WriteCapacityUnits"
+  service_namespace  = "dynamodb"
+}
+
+resource "aws_appautoscaling_policy" "dynamodb_write_policy" {
+  name               = "DynamoDBWriteCapacityUtilization"
+  policy_type        = "TargetTrackingScaling"
+  resource_id        = aws_appautoscaling_target.dynamodb_write_target.resource_id
+  scalable_dimension = aws_appautoscaling_target.dynamodb_write_target.scalable_dimension
+  service_namespace  = aws_appautoscaling_target.dynamodb_write_target.service_namespace
+
+  target_tracking_scaling_policy_configuration {
+    target_value       = 70.0
+    predefined_metric_specification {
+      predefined_metric_type = "DynamoDBWriteCapacityUtilization"
+    }
+    scale_in_cooldown  = 60
+    scale_out_cooldown = 60
+  }
+}
+
+resource "aws_lambda_function" "myfunc" {
+    filename        = data.archive_file.zip.output_path
+    source_code_hash = data.archive_file.zip.output_base64sha256
+    function_name   = "myfunc"
+    role            = aws_iam_role.iam_for_lambda.arn
+    handler         = "func.lambda_handler"
+    runtime         = "python3.8"
+    tags = {
+        Name = "myfunc"
+        Project = "cloud-resume-project-with-terraform"
+    }
   
-# }
+}
 
-# resource "aws_iam_role" "iam_for_lambda" {
-#     name = "iam_for_lambda"
-#     assume_role_policy = <<EOF
-# {
-#   "Version": "2012-10-17",
-#   "Statement": [
-#     {
-#       "Action": "sts:AssumeRole",
-#       "Principal": {
-#         "Service": "lambda.amazonaws.com"
-#       },
-#       "Effect": "Allow",
-#       "Sid": ""
-#     }
-#   ]
-# }
-# EOF
-#     tags = {
-#         Name = "iam_for_lambda"
-#         Project = "cloud-resume-project-with-terraform"
-#     }
-# }
+resource "aws_iam_role" "iam_for_lambda" {
+    name = "iam_for_lambda"
+    assume_role_policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "lambda.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+    tags = {
+        Name = "iam_for_lambda"
+        Project = "cloud-resume-project-with-terraform"
+    }
+}
 
-# resource "aws_iam_policy" "iam_policy_for_resume_project" {
-#     name       = "aws_iam_policy_for_terraform_resume_project_policy"
-#     path      = "/"
-#     description = "AWS IAM Policy for Terraform Resume Project"
-#     policy    = jsonencode(
-#         {
-#             Version : "2012-10-17",
-#             Statement : [
-#                 {
-#                     Effect : "Allow",
-#                     Action : [
-#                         "logs:CreateLogGroup",
-#                         "logs:CreateLogStream",
-#                         "logs:PutLogEvents"
-#                     ],
-#                     Resource : "arn:aws:logs:*:*:*"
-#                 },
-#                 {
-#                     Effect : "Allow",
-#                     Action : [
-#                         "dynamodb:PutItem",
-#                         "dynamodb:GetItem",
+resource "aws_iam_policy" "iam_policy_for_resume_project" {
+    name       = "aws_iam_policy_for_terraform_resume_project_policy"
+    path      = "/"
+    description = "AWS IAM Policy for Terraform Resume Project"
+    policy    = jsonencode(
+        {
+            Version : "2012-10-17",
+            Statement : [
+                {
+                    Effect : "Allow",
+                    Action : [
+                        "logs:CreateLogGroup",
+                        "logs:CreateLogStream",
+                        "logs:PutLogEvents"
+                    ],
+                    Resource : "arn:aws:logs:*:*:*"
+                },
+                {
+                    Effect : "Allow",
+                    Action : [
+                        "dynamodb:PutItem",
+                        "dynamodb:GetItem",
                         
-#                         ],
-#                     Resource : "arn:aws:dynamodb:*:*:table/cloudresume-test"
-#                 }
-#             ]   
-#         })
-#     tags = {
-#         Name = "iam_policy_for_resume_project"
-#         Project = "cloud-resume-project-with-terraform"
-#     }  
-# }
+                        ],
+                    Resource : "${aws_dynamodb_table.cloud_resume_terraform.arn}"
+                }
+            ]   
+        })
+    tags = {
+        Name = "iam_policy_for_resume_project"
+        Project = "cloud-resume-project-with-terraform"
+    }  
+}
 
-# resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
-#     role = aws_iam_role.iam_for_lambda.name
-#     policy_arn = aws_iam_policy.iam_policy_for_resume_project.arn
-# }
+resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
+    role = aws_iam_role.iam_for_lambda.name
+    policy_arn = aws_iam_policy.iam_policy_for_resume_project.arn
+}
 
-# data "archive_file" "zip" {
-#     type        = "zip"
-#     source_dir  = "${path.module}/lambda"
-#     output_path = "${path.module}/lambda.zip"
-# }
+data "archive_file" "zip" {
+    type        = "zip"
+    source_dir  = "${path.module}/lambda"
+    output_path = "${path.module}/lambda.zip"
+}
 
-# resource "aws_lambda_function_url" "url1" {
-#     function_name = aws_lambda_function.myfunc.function_name
-#     authorization_type = "NONE"
+resource "aws_lambda_function_url" "url1" {
+    function_name = aws_lambda_function.myfunc.function_name
+    authorization_type = "NONE"
 
-#     cors {
-#         allow_credentials = true
-#         allow_origins = ["http://www.09276477.xyz"]
-#         allow_methods = ["*"]
-#         allow_headers = ["date", "keep-alive"]
-#         max_age = 3600
-#     }
-# }
+    cors {
+        allow_credentials = true
+        allow_origins = ["http://resume.09276477.xyz"]
+        allow_methods = ["*"]
+        allow_headers = ["date", "keep-alive"]
+        max_age = 3600
+    }
+}
