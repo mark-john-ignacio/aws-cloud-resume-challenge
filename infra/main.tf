@@ -315,7 +315,3 @@ output "s3_bucket_name" {
 output "cloudfront_domain_name" {
     value = aws_cloudfront_distribution.cdn.domain_name
 }
-
-output "lambda_function_url" {
-    value = aws_lambda_function_url.url1.function_url
-}
