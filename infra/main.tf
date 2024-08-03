@@ -14,14 +14,14 @@ resource "null_resource" "upload_build_directory" {
     depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
 }
 
-# Needed for destroying the bucket
-# resource "null_resource" "empty_s3_bucket" {
-#     provisioner "local-exec" {
-#         command = "aws s3 rm s3://${aws_s3_bucket.mark_john_ignacio_html_resume.bucket} --recursive"
-#     }
+Needed for destroying the bucket
+resource "null_resource" "empty_s3_bucket" {
+    provisioner "local-exec" {
+        command = "aws s3 rm s3://${aws_s3_bucket.mark_john_ignacio_html_resume.bucket} --recursive"
+    }
 
-#     depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
-# }
+    depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
+}
 
 # Define the origin access identity
 resource "aws_cloudfront_origin_access_identity" "oai" {
@@ -111,7 +111,6 @@ resource "aws_cloudfront_distribution" "cdn" {
     minimum_protocol_version = "TLSv1.2_2021"
   }
   
-  retain_on_delete = true
 
   tags = {
     Name    = "mark_john_ignacio_html_resume-cdn"
@@ -261,6 +260,50 @@ resource "aws_api_gateway_deployment" "api_deployment" {
 
   rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
   stage_name  = "prod"
+}
+
+resource "aws_api_gateway_method" "options_method" {
+  rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
+  resource_id = aws_api_gateway_resource.views.id
+  http_method = "OPTIONS"
+  authorization = "NONE"
+}
+
+resource "aws_api_gateway_integration" "options_integration" {
+  rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
+  resource_id = aws_api_gateway_resource.views.id
+  http_method = aws_api_gateway_method.options_method.http_method
+  type = "MOCK"
+
+  request_templates = {
+    "application/json" = "{\"statusCode\": 200}"
+  }
+}
+
+resource "aws_api_gateway_method_response" "options_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
+  resource_id = aws_api_gateway_resource.views.id
+  http_method = aws_api_gateway_method.options_method.http_method
+  status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Methods" = true
+    "method.response.header.Access-Control-Allow-Headers" = true
+  }
+}
+
+resource "aws_api_gateway_integration_response" "options_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
+  resource_id = aws_api_gateway_resource.views.id
+  http_method = aws_api_gateway_method.options_method.http_method
+  status_code = aws_api_gateway_method_response.options_method_response.status_code
+
+  response_parameters = {
+    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
+    "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
+  }
 }
 
 output "api_url" {
