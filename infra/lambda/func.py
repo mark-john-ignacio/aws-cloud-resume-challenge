@@ -3,7 +3,7 @@ import boto3
 from decimal import Decimal
 
 dynamodb = boto3.resource('dynamodb')
-table = dynamodb.Table('cloudresume-test')
+table = dynamodb.Table('cloud-resume-terraform')
 
 def decimal_default(obj):
     """Convert Decimal to float"""
