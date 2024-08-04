@@ -79,7 +79,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   comment             = "CloudFront distribution for mark_john_ignacio_html_resume"
   default_root_object = "index.html"
   
-  aliases = ["resume.09276477.xyz"]
+  aliases = ["resume.mark-john-ignacio.xyz"]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
