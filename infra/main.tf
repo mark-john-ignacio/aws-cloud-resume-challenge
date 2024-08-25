@@ -1,67 +1,4 @@
-resource "aws_s3_bucket" "mark_john_ignacio_html_resume" {
-    bucket = "mark-john-ignacio-html-resume-abc123"
-    tags = {
-        Name = "mark_john_ignacio_html_resume"
-        Project = "cloud-resume-project-with-terraform"
-    }
-}
 
-resource "null_resource" "upload_build_directory" {
-    provisioner "local-exec" {
-        command = "aws s3 sync ../build s3://${aws_s3_bucket.mark_john_ignacio_html_resume.bucket} --delete"
-    }
-
-    depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
-}
-
-# Needed for destroying the bucket
-resource "null_resource" "empty_s3_bucket" {
-    provisioner "local-exec" {
-        command = "aws s3 rm s3://${aws_s3_bucket.mark_john_ignacio_html_resume.bucket} --recursive"
-    }
-
-    depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
-}
-
-# Define the origin access identity
-resource "aws_cloudfront_origin_access_identity" "oai" {
-  comment = "OAI for S3 bucket"
-}
-
-resource "aws_s3_bucket_policy" "bucket_policy" {
-  bucket = aws_s3_bucket.mark_john_ignacio_html_resume.id
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          AWS = "${aws_cloudfront_origin_access_identity.oai.iam_arn}"
-        },
-        Action = "s3:GetObject",
-        Resource = "${aws_s3_bucket.mark_john_ignacio_html_resume.arn}/*"
-      },
-      {
-        Sid = "AllowGitHubActionsUpload",
-        Effect = "Allow",
-        Principal = {
-          AWS = "arn:aws:iam::010526260632:user/github-actions-deploy-user"
-        },
-        Action = [
-          "s3:PutObject",
-          "s3:PutObjectAcl",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ],
-        Resource = [
-          "${aws_s3_bucket.mark_john_ignacio_html_resume.arn}",
-          "${aws_s3_bucket.mark_john_ignacio_html_resume.arn}/*"
-        ]
-      }
-    ]
-  })
-}
 
 # Define the CloudFront distribution
 resource "aws_cloudfront_distribution" "cdn" {
@@ -78,8 +15,8 @@ resource "aws_cloudfront_distribution" "cdn" {
   is_ipv6_enabled     = true
   comment             = "CloudFront distribution for mark_john_ignacio_html_resume"
   default_root_object = "index.html"
-  
-  aliases = ["resume.mark-john-ignacio.xyz"]
+
+  aliases = ["portfolio.markjohnignacio.com"]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
@@ -110,7 +47,7 @@ resource "aws_cloudfront_distribution" "cdn" {
     ssl_support_method       = "sni-only"
     minimum_protocol_version = "TLSv1.2_2021"
   }
-  
+
 
   tags = {
     Name    = "mark_john_ignacio_html_resume-cdn"
@@ -137,7 +74,7 @@ resource "aws_dynamodb_table" "cloud_resume_terraform" {
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "iam_for_lambda"
+  name               = "iam_for_lambda"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -163,26 +100,26 @@ resource "aws_iam_policy" "iam_policy_for_resume_project" {
   name        = "aws_iam_policy_for_terraform_resume_project_policy"
   path        = "/"
   description = "AWS IAM Policy for Terraform Resume Project"
-  policy      = jsonencode({
-    Version: "2012-10-17",
-    Statement: [
+  policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : [
       {
-        Effect: "Allow",
-        Action: [
+        Effect : "Allow",
+        Action : [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
           "logs:PutLogEvents"
         ],
-        Resource: "arn:aws:logs:*:*:*"
+        Resource : "arn:aws:logs:*:*:*"
       },
       {
-        Effect: "Allow",
-        Action: [
+        Effect : "Allow",
+        Action : [
           "dynamodb:PutItem",
           "dynamodb:GetItem",
           "dynamodb:UpdateItem"
         ],
-        Resource: "${aws_dynamodb_table.cloud_resume_terraform.arn}"
+        Resource : "${aws_dynamodb_table.cloud_resume_terraform.arn}"
       }
     ]
   })
@@ -193,7 +130,7 @@ resource "aws_iam_policy" "iam_policy_for_resume_project" {
 }
 
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
-  role      = aws_iam_role.iam_for_lambda.name
+  role       = aws_iam_role.iam_for_lambda.name
   policy_arn = aws_iam_policy.iam_policy_for_resume_project.arn
 }
 
@@ -263,9 +200,9 @@ resource "aws_api_gateway_deployment" "api_deployment" {
 }
 
 resource "aws_api_gateway_method" "options_method" {
-  rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
-  resource_id = aws_api_gateway_resource.views.id
-  http_method = "OPTIONS"
+  rest_api_id   = aws_api_gateway_rest_api.cloud_resume_api.id
+  resource_id   = aws_api_gateway_resource.views.id
+  http_method   = "OPTIONS"
   authorization = "NONE"
 }
 
@@ -273,7 +210,7 @@ resource "aws_api_gateway_integration" "options_integration" {
   rest_api_id = aws_api_gateway_rest_api.cloud_resume_api.id
   resource_id = aws_api_gateway_resource.views.id
   http_method = aws_api_gateway_method.options_method.http_method
-  type = "MOCK"
+  type        = "MOCK"
 
   request_templates = {
     "application/json" = "{\"statusCode\": 200}"
@@ -287,7 +224,7 @@ resource "aws_api_gateway_method_response" "options_method_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = true
+    "method.response.header.Access-Control-Allow-Origin"  = true
     "method.response.header.Access-Control-Allow-Methods" = true
     "method.response.header.Access-Control-Allow-Headers" = true
   }
@@ -300,7 +237,7 @@ resource "aws_api_gateway_integration_response" "options_integration_response" {
   status_code = aws_api_gateway_method_response.options_method_response.status_code
 
   response_parameters = {
-    "method.response.header.Access-Control-Allow-Origin" = "'*'"
+    "method.response.header.Access-Control-Allow-Origin"  = "'*'"
     "method.response.header.Access-Control-Allow-Methods" = "'POST,OPTIONS'"
     "method.response.header.Access-Control-Allow-Headers" = "'Content-Type'"
   }
@@ -311,11 +248,11 @@ output "api_url" {
 }
 
 output "s3_bucket_name" {
-    value = aws_s3_bucket.mark_john_ignacio_html_resume.bucket
+  value = aws_s3_bucket.mark_john_ignacio_html_resume.bucket
 }
 
 output "cloudfront_domain_name" {
-    value = aws_cloudfront_distribution.cdn.domain_name
+  value = aws_cloudfront_distribution.cdn.domain_name
 }
 
 resource "aws_dynamodb_table_item" "initial_item" {
