@@ -66,11 +66,3 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
   role       = aws_iam_role.iam_for_lambda.name
   policy_arn = aws_iam_policy.iam_policy_for_resume_project.arn
 }
-
-output "lambda_function_arn" {
-  value = aws_lambda_function.myfunc.arn
-}
-
-output "lambda_function_name" {
-  value = aws_lambda_function.myfunc.function_name
-}

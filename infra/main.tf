@@ -29,5 +29,7 @@ module "lambda" {
 module "api_gateway" {
   source                     = "./modules/api_gateway"
   lambda_function_invoke_arn = module.lambda.lambda_function_arn
+  lambda_function_arn        = module.lambda.lambda_function_arn
   lambda_function_name       = module.lambda.lambda_function_name
+  aws_region                 = var.aws_region
 }
