@@ -14,9 +14,9 @@ def lambda_handler(event, context):
         # Check if the event is from API Gateway
         if 'body' in event:
             body = json.loads(event['body'])
-            item_id = body['id']
+            item_id = str(body['id'])
         else:
-            item_id = event['id']
+            item_id = str(event['id'])
         
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table('cloud-resume-terraform')
@@ -44,7 +44,7 @@ def lambda_handler(event, context):
                 'Access-Control-Allow-Headers': 'Content-Type',
                 'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
             },
-            'body': json.dumps('Hello from Lambda!')
+            'body': json.dumps({'views': views})
         }
 
     except Exception as e:

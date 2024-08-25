@@ -17,7 +17,7 @@ resource "aws_cloudfront_distribution" "cdn" {
   comment             = "CloudFront distribution for mark_john_ignacio_html_resume"
   default_root_object = "index.html"
 
-  aliases = ["portfolio.markjohnignacio.com"]
+  aliases = ["www.markjohnignacio.com"]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]

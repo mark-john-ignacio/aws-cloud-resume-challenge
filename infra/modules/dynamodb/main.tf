@@ -21,6 +21,10 @@ resource "aws_dynamodb_table_item" "initial_item" {
     "id"    = { S = "1" },
     "views" = { N = "200" }
   })
+
+  lifecycle {
+    ignore_changes = [item]
+  }
 }
 
 output "dynamodb_table_arn" {
