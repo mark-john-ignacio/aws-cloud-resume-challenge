@@ -45,13 +45,13 @@ resource "null_resource" "upload_build_directory" {
   depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
 }
 
-resource "null_resource" "empty_s3_bucket" {
-  provisioner "local-exec" {
-    command = "aws s3 rm s3://${aws_s3_bucket.mark_john_ignacio_html_resume.bucket} --recursive"
-  }
+# resource "null_resource" "empty_s3_bucket" {
+#   provisioner "local-exec" {
+#     command = "aws s3 rm s3://${aws_s3_bucket.mark_john_ignacio_html_resume.bucket} --recursive"
+#   }
 
-  depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
-}
+#   depends_on = [aws_s3_bucket.mark_john_ignacio_html_resume]
+# }
 
 output "bucket_regional_domain_name" {
   value = aws_s3_bucket.mark_john_ignacio_html_resume.bucket_regional_domain_name
