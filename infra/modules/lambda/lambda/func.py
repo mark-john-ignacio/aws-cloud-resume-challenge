@@ -39,7 +39,12 @@ def lambda_handler(event, context):
         logger.info(f"Views updated successfully: {views}")
         return {
             'statusCode': 200,
-            'body': json.dumps({'views': views})
+            'headers': {
+                'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Headers': 'Content-Type',
+                'Access-Control-Allow-Methods': 'OPTIONS,POST,GET'
+            },
+            'body': json.dumps('Hello from Lambda!')
         }
 
     except Exception as e:
