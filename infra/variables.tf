@@ -32,3 +32,12 @@ variable "build_directory_path" {
   type        = string
   description = "Path to the build directory containing the website files"
 }
+
+variable "bucket_name_for_state" {
+  type = string
+}
+
+variable "state_key" {
+  type        = string
+  description = "The key to use for the state file in the S3 bucket"
+}

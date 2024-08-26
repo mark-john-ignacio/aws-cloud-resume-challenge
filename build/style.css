@@ -716,6 +716,7 @@ h1 > span {
   translate: -75%;
 }
 
+
 @media (min-width: 37.5em) {
   .contact__rings {
     bottom: 47px;
@@ -763,5 +764,43 @@ footer {
 @media (min-width: 62.5em) {
   footer {
     padding-block: 47px 92px;
+  }
+}
+
+/* Visitor Counter Section */
+.visitor-counter-section {
+  padding: 40px 0;
+  text-align: center;
+  background-color: var(--bg-body2);
+  color: var(--text1);
+}
+
+.visitor-counter {
+  font-size: var(--fs-24);
+  font-weight: 700;
+}
+
+.visitor-counter p {
+  margin: 0;
+}
+
+/* Media Queries */
+@media (min-width: 37.5em) {
+  .visitor-counter-section {
+    padding: 60px 0;
+  }
+
+  .visitor-counter {
+    font-size: var(--fs-32);
+  }
+}
+
+@media (min-width: 62.5em) {
+  .visitor-counter-section {
+    padding: 80px 0;
+  }
+
+  .visitor-counter {
+    font-size: var(--fs-40);
   }
 }
