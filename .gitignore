@@ -12,7 +12,7 @@ infra/*_override.tf
 infra/*_override.tf.json
 
 # Ignore Terraform variable files
-# infra/*.tfvars
+infra/*.tfvars
 infra/*.tfvars.json
 
 # Ignore Terraform plan files
