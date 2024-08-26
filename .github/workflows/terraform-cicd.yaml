@@ -48,7 +48,7 @@ jobs:
           terraform plan -out=tfplan \
           -var="bucket_name=${{ secrets.BUCKET_NAME }}" \
           -var="acm_certificate_arn=${{ secrets.ACM_CERTIFICATE_ARN }}" \
-          -var="github_actions_user_arn=${{ secrets.GITHUB_ACTIONS_USER_ARN }}" \
+          -var="github_actions_user_arn=${{ secrets.AWS_GITHUB_ACTION_USER_ARN }}" \
           -var="build_directory_path=${{ secrets.BUILD_DIRECTORY_PATH }}" \
           -var="aws_region=${{ secrets.AWS_REGION }}"
         working-directory: ./infra
