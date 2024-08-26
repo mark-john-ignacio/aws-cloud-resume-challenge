@@ -7,11 +7,11 @@ terraform {
   }
 
   backend "s3" {
-    bucket         = var.bucket_name_for_state
-    key            = var.state_key
-    region         = var.aws_region
-    encrypt        = true
-    dynamodb_table = "terraform-lock-table" # Optional, for state locking
+    bucket  = "terraform-s3-state-mark-abc123"
+    key     = "aws-cloud-resume-project-terraform.tfstate"
+    region  = "us-east-1"
+    encrypt = true
+    # dynamodb_table = "terraform-lock-table"
   }
 }
 

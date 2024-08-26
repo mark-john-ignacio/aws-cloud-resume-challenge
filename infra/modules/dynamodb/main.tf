@@ -27,6 +27,23 @@ resource "aws_dynamodb_table_item" "initial_item" {
   }
 }
 
+resource "aws_dynamodb_table" "terraform_lock" {
+  name         = "terraform-lock-table"
+  billing_mode = "PAY_PER_REQUEST"
+  hash_key     = "LockID"
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  tags = var.tags
+}
+
 output "dynamodb_table_arn" {
   value = aws_dynamodb_table.cloud_resume_terraform.arn
+}
+
+output "dynamodb_table_name_for_lock" {
+  value = aws_dynamodb_table.terraform_lock.name
 }
