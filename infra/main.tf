@@ -33,3 +33,7 @@ module "api_gateway" {
   lambda_function_name       = module.lambda.lambda_function_name
   aws_region                 = var.aws_region
 }
+
+// TODO: Move backend to S3
+// TODO: Create CI/CD pipeline for Terraform
+// TODO: Remaining Steps on AWS Cloud Resume Challenge
