@@ -14,6 +14,10 @@ variable "bucket_name" {
 
 variable "tags" {
   type = map(string)
+  default = {
+    Name    = "mark_john_ignacio_html_resume"
+    Project = "cloud-resume-project-with-terraform"
+  }
 }
 
 variable "acm_certificate_arn" {
