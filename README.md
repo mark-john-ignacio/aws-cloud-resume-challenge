@@ -13,7 +13,7 @@ The architecture of this project includes the following components:
 - **Amazon S3**: Hosting the static content of the resume website.
 - **AWS CloudFront**: Serving the website through a content delivery network for improved performance and global distribution.
 - **AWS Certificate Manager**: Providing an SSL/TLS certificate for securing the website with HTTPS.
-- **AWS Lambda**: Handling backend logic for dynamic interactions, such as resume form submissions.
+- **AWS Lambda**: Handling backend logic for dynamic viewer count
 - **Amazon DynamoDB**: Storing data submitted through the resume form.
 - **GitHub Actions**: Automating the CI/CD pipeline for deployment.
 - **Terraform**: Managing infrastructure as code for provisioning and managing AWS resources.
@@ -23,8 +23,8 @@ The architecture of this project includes the following components:
 - **Static Website Hosting**: Resume website hosted on Amazon S3.
 - **Custom Domain & SSL**: Secure access with HTTPS using AWS Certificate Manager.
 - **Content Delivery Network**: Fast and reliable website delivery using AWS CloudFront.
-- **Dynamic Backend**: Serverless backend implemented with AWS Lambda for form handling.
-- **Data Storage**: Submission data stored in DynamoDB.
+- **Dynamic Backend**: Serverless backend implemented with AWS Lambda for viewer counter.
+- **Data Storage**: Viewer counter data stored in DynamoDB.
 - **Automated Deployment**: Continuous integration and deployment using GitHub Actions.
 - **Infrastructure Management**: Managed infrastructure using Terraform.
 
