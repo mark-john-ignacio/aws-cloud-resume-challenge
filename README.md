@@ -5,6 +5,8 @@
 
 This project is my attempt at the [Cloud Resume Challenge](https://cloudresumechallenge.dev/) created by Forrest Brazeal. The challenge is a multi-step project designed to build and demonstrate essential cloud skills. The objective is to create a cloud-hosted resume website, showcasing skills in cloud architecture and DevOps practices.
 
+You can view the live project [here](https://www.markjohnignacio.com).
+
 ## 📐 Architecture
 
 ![Architecture Diagram](architecture-diagram/architecture-diagram.png) <!-- Replace with the path to your architecture diagram image -->
@@ -138,7 +140,6 @@ The architecture of this project includes the following components:
 For questions or support, please contact:
 
 - **Email**: [markme44.mm@gmail.com](mailto:markme44.mm@gmail.com)
-- **GitHub Issues**: [Submit an Issue](https://github.com/markme44/aws-cloud-resume-challenge/issues)
 
 ---
 
