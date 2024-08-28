@@ -3,7 +3,7 @@
 
 ## 📚 Overview
 
-This project is my attempt at the [Cloud Resume Challenge](https://cloudresumechallenge.dev/) created by Forrest Brazeal. The challenge is a multi-step project designed to build and demonstrate essential cloud skills. The objective is to create a cloud-hosted resume website, showcasing skills in cloud architecture and DevOps practices.
+This project is my attempt at the [Cloud Resume Challenge](https://cloudresumechallenge.dev/) created by Forrest Brazeal. The challenge is a multi-step project designed to build and demonstrate essential cloud skills. The objective is to create a cloud-hosted resume website, showcasing skills in cloud architecture and DevOps practices. Read more about my experience on this [blog post](https://medium.com/@markme44.mm/my-journey-through-the-aws-cloud-resume-challenge-lessons-learned-and-personal-growth-f3edb59a0ee3)
 
 You can view the live project [here](https://www.markjohnignacio.com).
 
