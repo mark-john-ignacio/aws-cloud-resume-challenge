@@ -76,6 +76,16 @@ h3 {
   line-height: 1.1;
 }
 
+.header-m{
+  font-size: 1.5rem;
+  font-size: clamp(1.5rem, 0.33rem + 7.11vw, 3rem);
+  line-height: 1.17;
+}
+
+.mt-4{
+  margin-top: 1rem;
+}
+
 p {
   font-size: 1rem;
   font-size: clamp(1rem, 0.79rem + 0.89vw, 1.125rem);
