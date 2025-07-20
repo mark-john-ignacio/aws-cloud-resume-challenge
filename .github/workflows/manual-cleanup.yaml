@@ -1,0 +1,94 @@
+name: Manual AWS Resource Cleanup
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_manual_cleanup:
+        description: 'Type "MANUAL-CLEANUP" to confirm manual deletion of AWS resources'
+        required: true
+        default: ''
+
+jobs:
+  manual-cleanup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Validate confirmation
+        if: github.event.inputs.confirm_manual_cleanup != 'MANUAL-CLEANUP'
+        run: |
+          echo "❌ Confirmation failed. You must type 'MANUAL-CLEANUP' exactly to proceed."
+          exit 1
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Delete Lambda Function
+        run: |
+          echo "🗑️ Deleting Lambda function..."
+          aws lambda delete-function --function-name myfunc || echo "Lambda function not found or already deleted"
+
+      - name: Delete API Gateway
+        run: |
+          echo "🗑️ Deleting API Gateway..."
+          aws apigateway delete-rest-api --rest-api-id 7kjzfvb11h || echo "API Gateway not found or already deleted"
+
+      - name: Delete CloudFront Distribution
+        run: |
+          echo "🗑️ Disabling and deleting CloudFront distribution..."
+          
+          # Get current ETag
+          ETAG=$(aws cloudfront get-distribution --id E146KGVI8W0KB5 --query 'ETag' --output text 2>/dev/null || echo "")
+          
+          if [ ! -z "$ETAG" ]; then
+            echo "Found distribution with ETag: $ETAG"
+            
+            # Disable the distribution first
+            aws cloudfront get-distribution-config --id E146KGVI8W0KB5 --query 'DistributionConfig' > dist-config.json
+            jq '.Enabled = false' dist-config.json > dist-config-disabled.json
+            
+            aws cloudfront update-distribution --id E146KGVI8W0KB5 --distribution-config file://dist-config-disabled.json --if-match $ETAG
+            
+            echo "Distribution disabled. It will take time to propagate before it can be deleted."
+            echo "You may need to manually delete it from the AWS console after it's fully disabled."
+          else
+            echo "CloudFront distribution not found or already deleted"
+          fi
+
+      - name: Empty and Delete S3 Buckets
+        run: |
+          echo "🗑️ Emptying and deleting S3 buckets..."
+          
+          # Delete resume bucket contents and bucket
+          aws s3 rm s3://mark-john-ignacio-html-resume-abc1223 --recursive || echo "Bucket not found or already empty"
+          aws s3 rb s3://mark-john-ignacio-html-resume-abc1223 --force || echo "Bucket not found or already deleted"
+          
+          echo "✅ S3 cleanup completed"
+
+      - name: Clean up Terraform State
+        run: |
+          echo "🗑️ Cleaning up Terraform state..."
+          aws s3 rm s3://${{ secrets.AWS_S3_BUCKET_FOR_INFRA_CONFIG }}/aws-cloud-resume-project-terraform.tfstate || echo "State file not found"
+
+      - name: Final Verification
+        run: |
+          echo "🔍 Final verification of resource cleanup..."
+          echo "Remaining S3 buckets:"
+          aws s3 ls | grep -i resume || echo "✅ No resume-related buckets found"
+          
+          echo "Remaining CloudFront distributions:"
+          aws cloudfront list-distributions --query "DistributionList.Items[*].{Id:Id,Status:Status}" --output table 2>/dev/null || echo "✅ No distributions or error checking"
+          
+          echo "Remaining API Gateways:"
+          aws apigateway get-rest-apis --query "items[*].name" --output text 2>/dev/null || echo "✅ No APIs found"
+          
+          echo "Remaining Lambda functions:"
+          aws lambda list-functions --query "Functions[*].FunctionName" --output text 2>/dev/null || echo "✅ No functions found"
+
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}

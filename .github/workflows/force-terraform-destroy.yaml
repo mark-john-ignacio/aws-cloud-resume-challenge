@@ -1,0 +1,97 @@
+name: Force Terraform Destroy (Break Lock)
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: 'Type "FORCE-DESTROY" to confirm breaking lock and destroying remaining resources'
+        required: true
+        default: ''
+
+jobs:
+  force-terraform-destroy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Validate confirmation
+        if: github.event.inputs.confirm_destroy != 'FORCE-DESTROY'
+        run: |
+          echo "❌ Confirmation failed. You must type 'FORCE-DESTROY' exactly to proceed."
+          exit 1
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Download Terraform State from S3
+        run: |
+          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET_FOR_INFRA_CONFIG }}/aws-cloud-resume-project-terraform.tfstate ./infra/terraform.tfstate || echo "State file not found, continuing..."
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Force Unlock Terraform State
+        run: |
+          terraform force-unlock -force 49b85b57-fdb7-4ffb-ad2e-d876cc7dcbed || echo "Lock may not exist anymore"
+        working-directory: ./infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Destroy with Force Unlock
+        run: |
+          terraform destroy -auto-approve -lock=false \
+          -var="bucket_name=${{ secrets.BUCKET_NAME }}" \
+          -var="acm_certificate_arn=${{ secrets.ACM_CERTIFICATE_ARN }}" \
+          -var="github_actions_user_arn=${{ secrets.AWS_GITHUB_ACTION_USER_ARN }}" \
+          -var="build_directory_path=${{ secrets.BUILD_DIRECTORY_PATH }}" \
+          -var="aws_region=${{ secrets.AWS_REGION }}"
+        working-directory: ./infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Clean up Terraform State in S3
+        run: |
+          echo "🗑️ Removing terraform state file from S3..."
+          aws s3 rm s3://${{ secrets.AWS_S3_BUCKET_FOR_INFRA_CONFIG }}/aws-cloud-resume-project-terraform.tfstate || echo "State file already removed"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Verify Resources Destroyed
+        run: |
+          echo "🔍 Checking remaining resources..."
+          echo "S3 Buckets:"
+          aws s3 ls | grep -i resume || echo "No resume buckets found"
+          echo "CloudFront:"
+          aws cloudfront list-distributions --query "DistributionList.Items[*].Id" --output text || echo "No distributions"
+          echo "API Gateway:"
+          aws apigateway get-rest-apis --query "items[*].name" --output text || echo "No APIs"
+          echo "Lambda:"
+          aws lambda list-functions --query "Functions[*].FunctionName" --output text || echo "No functions"
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
