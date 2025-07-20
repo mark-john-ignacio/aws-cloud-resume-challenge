@@ -1,0 +1,86 @@
+name: Terraform Destroy Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_destroy:
+        description: 'Type "DESTROY" to confirm infrastructure destruction'
+        required: true
+        default: ''
+
+jobs:
+  terraform-destroy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Validate confirmation
+        if: github.event.inputs.confirm_destroy != 'DESTROY'
+        run: |
+          echo "❌ Confirmation failed. You must type 'DESTROY' exactly to proceed."
+          exit 1
+
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Download Terraform State from S3
+        run: |
+          aws s3 cp s3://${{ secrets.AWS_S3_BUCKET_FOR_INFRA_CONFIG }}/aws-cloud-resume-project-terraform.tfstate ./infra/terraform.tfstate
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Plan Destroy
+        run: |
+          terraform plan -destroy -out=destroy-plan \
+          -var="bucket_name=${{ secrets.BUCKET_NAME }}" \
+          -var="acm_certificate_arn=${{ secrets.ACM_CERTIFICATE_ARN }}" \
+          -var="github_actions_user_arn=${{ secrets.AWS_GITHUB_ACTION_USER_ARN }}" \
+          -var="build_directory_path=${{ secrets.BUILD_DIRECTORY_PATH }}" \
+          -var="aws_region=${{ secrets.AWS_REGION }}"
+        working-directory: ./infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Terraform Destroy
+        run: |
+          terraform apply -auto-approve destroy-plan
+        working-directory: ./infra
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Clean up Terraform State in S3
+        run: |
+          echo "🗑️ Removing terraform state file from S3..."
+          aws s3 rm s3://${{ secrets.AWS_S3_BUCKET_FOR_INFRA_CONFIG }}/aws-cloud-resume-project-terraform.tfstate
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+
+      - name: Success notification
+        run: |
+          echo "✅ Infrastructure successfully destroyed!"
+          echo "All AWS resources have been removed."
